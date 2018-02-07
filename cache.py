@@ -1,9 +1,12 @@
 # uwsgi --http-socket 127.0.0.1:3031 --wsgi-file cache.py --master --processes 4 --spooler spool --cache2 name=airport,items=5000,blocksize=20,keysize=3 --cache2 name=common,items=100
 #
 # questions：
-# - does cache protected by RWMutex? should all workers stagger refresh time？
-# - how to ensure all nodes execute the `refresh_airports` at the same time?
-# - minimize the time comsumed on `_refresh_airports_list_in_workers` to handle the normal reqeusts
+# - Q: does cache protected by RWMutex? should all workers stagger refresh time？
+#   A: if RWMutex, there is no need to stagger because only read operations.
+# - Q: how to ensure all nodes execute the `refresh_airports` at the same time?
+#   A: don't use `timer`, use `cron` & jitter(avoid concurrent pressure to DB) instead
+# - Q: how to minimize the time comsumed on `_refresh_airports_list_in_workers` to avoid throughput jitter？
+#   A：Maybe sleep random time duration, but long sleep will hang the worker.
 
 
 import uwsgi
@@ -27,6 +30,7 @@ uwsgi.register_signal(17, "workers", _refresh_airports_list_in_workers)
 
 @timer(30, target='spooler')
 def refresh_airports(*args):
+    time.sleep(random.randrange(2, 6))  # jitter, working in spooler, so time.sleep is OK!!!
     airports = {
         "bjz" : "Beijing T3 internatianl airport", # Warning: fail to set because excced 20 bytes, but will not throw exc, get will be None
         "tjw" : "Tianjin T1 airport"
