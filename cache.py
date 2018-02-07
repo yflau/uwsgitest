@@ -5,13 +5,19 @@ from uwsgidecorators import *
 
 AIRPORTS = {}
 
-def refresh_airports_list_in_workers(signum):
+def _refresh_airports_list_in_workers(signum):
+    if not uwsgi.cache_exists("airport_codes", "common"):
+        return
     codes = uwsgi.cache_get("airport_codes", "common")
     codes = [codes[i:i+3] for i in xrange(0, len(codes),3)]
     for e in codes:
         AIRPORTS[e] = uwsgi.cache_get(e, "airport")
 
-uwsgi.register_signal(17, "workers", refresh_airports_list_in_workers)
+@postfork
+def refresh_airports_list_in_workers():   # because AIRPORTS of master is empty or dated(even if loaded initially)
+    _refresh_airports_list_in_workers(None)
+
+uwsgi.register_signal(17, "workers", _refresh_airports_list_in_workers)
 
 @timer(30, target='spooler')
 def refresh_airports(*args):
