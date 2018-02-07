@@ -11,6 +11,7 @@
 #        the funciton, lock is useless.
 #      - Register signal handler for each worker, signal each worker after some time sequentially, acually there is no need to stagger for one
 #        node if nodes have already staggered.
+# 
 
 import time
 import uwsgi
@@ -18,7 +19,7 @@ from uwsgidecorators import *
 
 AIRPORTS = {}    # it's better load all data from here, thus all forked worker have a basis to work
 
-def _refresh_airports_list_in_workers(signum):
+def _refresh_worker(signum):
     if not uwsgi.cache_exists("airport_codes", "common"):
         return
     codes = uwsgi.cache_get("airport_codes", "common")
@@ -27,15 +28,15 @@ def _refresh_airports_list_in_workers(signum):
         AIRPORTS[e] = uwsgi.cache_get(e, "airport")
 
 @postfork
-def refresh_airports_list_in_workers():   # because AIRPORTS of master is empty or dated(even if loaded initially)
-    _refresh_airports_list_in_workers(None)
+def refresh_worker():   # because AIRPORTS of master is empty or dated(even if loaded initially)
+    _refresh_worker(None)
 
-uwsgi.register_signal(17, "workers", _refresh_airports_list_in_workers)
+uwsgi.register_signal(17, "workers", _refresh_worker)
 # for i,k in enumerate(uwsgi.workers()):  # avoid throughput jitter in one node
 #     uwsgi.register_signal(17+i, "worker%s" % i, _refresh_airports_list_in_workers)
 
 @timer(30, target='spooler')
-def refresh_airports(*args):
+def refresh_shared(*args):
     time.sleep(random.randrange(3, 8))  # jitter, working in spooler, so time.sleep is OK!!!
     airports = {
         "bjz" : "Beijing T3 internatianl airport", # Warning: fail to set because excced 20 bytes, but will not throw exc, get will be None
