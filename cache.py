@@ -1,4 +1,10 @@
 # uwsgi --http-socket 127.0.0.1:3031 --wsgi-file cache.py --master --processes 4 --spooler spool --cache2 name=airport,items=5000,blocksize=20,keysize=3 --cache2 name=common,items=100
+#
+# questions：
+# - does cache protected by RWMutex? should all workers stagger refresh time？
+# - how to ensure all nodes execute the `refresh_airports` at the same time?
+# - minimize the time comsumed on `_refresh_airports_list_in_workers` to handle the normal reqeusts
+
 
 import uwsgi
 from uwsgidecorators import *
