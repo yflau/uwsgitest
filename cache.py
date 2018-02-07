@@ -8,7 +8,7 @@
 # - Q: how to minimize the time comsumed on `_refresh_airports_list_in_workers` to avoid throughput jitter？
 #   A：Maybe sleep random time duration, but long sleep will hang the worker.
 
-
+import time
 import uwsgi
 from uwsgidecorators import *
 
