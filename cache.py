@@ -11,7 +11,8 @@
 #        the funciton, lock is useless.
 #      - Register signal handler for each worker, signal each worker after some time sequentially, acually there is no need to stagger for one
 #        node if nodes have already staggered.
-# 
+# - Q: what about use lmdb instead uwsgi cache?
+#   A: Maybe lmdb can save lots of memory.
 
 import time
 import uwsgi
