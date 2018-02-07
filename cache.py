@@ -22,14 +22,14 @@ uwsgi.register_signal(17, "workers", _refresh_airports_list_in_workers)
 @timer(30, target='spooler')
 def refresh_airports(*args):
     airports = {
-        "bjz" : "Beijing T3 internatianl airport", # Warning: fail to set because excced 20 bytes, but will not throw exc, got will be None
+        "bjz" : "Beijing T3 internatianl airport", # Warning: fail to set because excced 20 bytes, but will not throw exc, get will be None
         "tjw" : "Tianjin T1 airport"
     }
     ks = ""
     for k,v in airports.items():
         ks += k
-        uwsgi.cache_set(k, v, 0, "airport")
-    uwsgi.cache_set("airport_codes", ks, 0, "common")
+        uwsgi.cache_set(k, v, 0, "airport")   # it's better to pack the `v` use struct to a fixed size string to fit the blocksize
+    uwsgi.cache_set("airport_codes", ks, 0, "common")  # TODO: should check length of ks less than 64K, or should truncate to 64K and send warning email
     uwsgi.signal(17)
 
 def application(environ, start_response):
