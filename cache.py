@@ -24,14 +24,14 @@ AIRPORTS = {}    # it's better load all data from here, thus all forked worker h
 def init():
     if settings.CONFIG_MODE:
         AIRPORTS = json.loads(open(settings.CONFIG_FILE).read())
-    else: // dummy
+    else: # dummy
         AIRPORTS = {
             "bjz" : "Beijing T3 internatianl airport", # Warning: fail to set because excced 20 bytes, but will not throw exc, get will be None
             "tjw" : "Tianjin T1 airport"
         }
 
 class settings:
-    CONFIG_MODE = "LOCAL_FILE" // "DATABASE", "DIAMOND"?
+    CONFIG_MODE = "LOCAL_FILE" # "DATABASE", "DIAMOND"?
     CONFIG_FILE = "/home/admin/xxx/config.json"
 
 def _refresh_worker(signum):
@@ -60,7 +60,7 @@ def refresh_shared(*args):
         "tjw" : "Tianjin T1 airport"
     }
     
-    // backup current available to local file used to disaster recovery
+    # backup current available to local file used to disaster recovery
     codes = uwsgi.cache_get("airport_codes", "common")
     codes = [codes[i:i+3] for i in xrange(0, len(codes),3)]
     for e in codes:
