@@ -21,6 +21,19 @@ from atomicwrites import atomic_write
 
 AIRPORTS = {}    # it's better load all data from here, thus all forked worker have a basis to work
 
+def init():
+    if settings.CONFIG_MODE:
+        AIRPORTS = json.loads(open(settings.CONFIG_FILE).read())
+    else: // dummy
+        AIRPORTS = {
+            "bjz" : "Beijing T3 internatianl airport", # Warning: fail to set because excced 20 bytes, but will not throw exc, get will be None
+            "tjw" : "Tianjin T1 airport"
+        }
+
+class settings:
+    CONFIG_MODE = "LOCAL_FILE" // "DATABASE", "DIAMOND"?
+    CONFIG_FILE = "/home/admin/xxx/config.json"
+
 def _refresh_worker(signum):
     if not uwsgi.cache_exists("airport_codes", "common"):
         return
@@ -39,6 +52,8 @@ uwsgi.register_signal(17, "workers", _refresh_worker)
 
 @timer(30, target='spooler')
 def refresh_shared(*args):
+    if settings.CONFIG_MODE = "LOCAL_FILE":
+        return
     time.sleep(random.randrange(3, 8))  # jitter, working in spooler, so time.sleep is OK!!!
     airports = {
         "bjz" : "Beijing T3 internatianl airport", # Warning: fail to set because excced 20 bytes, but will not throw exc, get will be None
@@ -50,7 +65,7 @@ def refresh_shared(*args):
     codes = [codes[i:i+3] for i in xrange(0, len(codes),3)]
     for e in codes:
         AIRPORTS[e] = uwsgi.cache_get(e, "airport")
-    with atomic_write(path, overwrite=True) as f:
+    with atomic_write(settings.CONFIG_FILE, overwrite=True) as f:
         f.write(json.dumps(AIRPORTS))
     
     ks = ""
