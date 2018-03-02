@@ -35,11 +35,7 @@ class settings:
     CONFIG_FILE = "/home/admin/xxx/config.json"
 
 def _refresh_worker(signum):
-    if not uwsgi.cache_exists("airport_codes", "common"):
-        return
-    codes = uwsgi.cache_get("airport_codes", "common")
-    codes = [codes[i:i+3] for i in xrange(0, len(codes),3)]
-    for e in codes:
+    for e in uwsgi.cache_keys("airport"):
         AIRPORTS[e] = uwsgi.cache_get(e, "airport")
 
 @postfork
@@ -61,18 +57,13 @@ def refresh_shared(*args):
     }
     
     # backup current available to local file used to disaster recovery
-    codes = uwsgi.cache_get("airport_codes", "common")
-    codes = [codes[i:i+3] for i in xrange(0, len(codes),3)]
-    for e in codes:
+    for e in uwsgi.cache_keys("airport"):
         AIRPORTS[e] = uwsgi.cache_get(e, "airport")
     with atomic_write(settings.CONFIG_FILE, overwrite=True) as f:
         f.write(json.dumps(AIRPORTS))
     
-    ks = ""
     for k,v in airports.items():
-        ks += k
         uwsgi.cache_set(k, v, 0, "airport")   # it's better to pack the `v` use struct to a fixed size string to fit the blocksize
-    uwsgi.cache_set("airport_codes", ks, 0, "common")  # TODO: should check length of ks less than 64K, or should truncate to 64K and send warning email
     uwsgi.signal(17)
     # for i,k in enumerate(uwsgi.workers()):    # avoid throughput jitter in one node
     #     uwsgi.signal(17+i)
