@@ -17,6 +17,7 @@
 import time
 import uwsgi
 from uwsgidecorators import *
+from atomicwrites import atomic_write
 
 AIRPORTS = {}    # it's better load all data from here, thus all forked worker have a basis to work
 
@@ -43,6 +44,15 @@ def refresh_shared(*args):
         "bjz" : "Beijing T3 internatianl airport", # Warning: fail to set because excced 20 bytes, but will not throw exc, get will be None
         "tjw" : "Tianjin T1 airport"
     }
+    
+    // backup current available to local file used to disaster recovery
+    codes = uwsgi.cache_get("airport_codes", "common")
+    codes = [codes[i:i+3] for i in xrange(0, len(codes),3)]
+    for e in codes:
+        AIRPORTS[e] = uwsgi.cache_get(e, "airport")
+    with atomic_write(path, overwrite=True) as f:
+        f.write(json.dumps(AIRPORTS))
+    
     ks = ""
     for k,v in airports.items():
         ks += k
