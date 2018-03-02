@@ -28,8 +28,9 @@ def init():
     else: # dummy
         AIRPORTS = {
             "bjz" : "Beijing T3 internatianl airport", # Warning: fail to set because excced 20 bytes, but will not throw exc, get will be None
-            "tjw" : "Tianjin T1 airport"
-        }
+            "tjw" : "Tianjin T1 airport"}
+
+init()
 
 class settings:
     CONFIG_MODE = "LOCAL_FILE" # "DATABASE", "DIAMOND"?
