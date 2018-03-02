@@ -15,6 +15,7 @@
 #   A: Maybe lmdb can save lots of memory.
 
 import time
+import json
 import uwsgi
 from uwsgidecorators import *
 from atomicwrites import atomic_write
